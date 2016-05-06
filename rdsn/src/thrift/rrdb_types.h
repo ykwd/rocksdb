@@ -4,8 +4,8 @@
  * DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
  *  @generated
  */
-#ifndef rocksdb_TYPES_H
-#define rocksdb_TYPES_H
+#ifndef rrdb_TYPES_H
+#define rrdb_TYPES_H
 
 #include <iosfwd>
 

@@ -22,7 +22,7 @@ struct get_resp
     2:string value;
 }
 
-service leveldb 
+service rrdb
 {
     put_resp put(1:put_req req);
     get_resp get(1:get_req req);

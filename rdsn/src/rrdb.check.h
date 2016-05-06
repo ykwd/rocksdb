@@ -3,11 +3,11 @@
 
 namespace dsn { namespace apps {  
 
-class rocksdb_checker 
+class rrdb_checker 
     : public ::dsn::tools::checker
 {
 public:
-    rocksdb_checker(const char* name, dsn_app_info* info, int count)
+    rrdb_checker(const char* name, dsn_app_info* info, int count)
           : ::dsn::tools::checker(name, info, count)
     {
         for (auto& app : _apps)

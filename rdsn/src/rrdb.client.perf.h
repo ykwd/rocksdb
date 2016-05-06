@@ -1,16 +1,16 @@
 # pragma once
 
-# include "rocksdb.client.h"
+# include "rrdb.client.h"
 
 namespace dsn { namespace apps { 
-class leveldb_perf_test_client
-    : public leveldb_client,
+class rrdb_perf_test_client
+    : public rrdb_client,
       public ::dsn::service::perf_client_helper
 {
 public:
-    leveldb_perf_test_client(
+    rrdb_perf_test_client(
         ::dsn::rpc_address server)
-        : leveldb_client(server)
+        : rrdb_client(server)
     {
     }
     
@@ -33,36 +33,40 @@ public:
     void send_one_put(int payload_bytes, int key_space_size)
     {
         put_req req;
-        // TODO: randomize the value of req
-        // auto rs = random64(0, 10000000) % key_space_size;
-        // std::stringstream ss;
-        // ss << "key." << rs;
-        // req = ss.str();
+        char buf[10];
+        auto key = random64(0, 10000000) % key_space_size;
+        itoa(key, buf, 10);
+        req.key = std::string(buf);
+        req.value = std::string(payload_bytes, 'x');
+        auto hash = key;
         put(
             req,
             [this, context = prepare_send_one()](error_code err, put_resp&& resp)
             {
                 end_send_one(context, err);
             },
-            _timeout
+            _timeout,
+            0,
+            hash
             );
     }
 
     void send_one_get(int payload_bytes, int key_space_size)
     {
         get_req req;
-        // TODO: randomize the value of req
-        // auto rs = random64(0, 10000000) % key_space_size;
-        // std::stringstream ss;
-        // ss << "key." << rs;
-        // req = ss.str();
+        char buf[10];
+        auto key = random64(0, 10000000) % key_space_size;
+        itoa(key, buf, 10);
+        auto hash = key;
         get(
             req,
             [this, context = prepare_send_one()](error_code err, get_resp&& resp)
             {
                 end_send_one(context, err);
             },
-            _timeout
+            _timeout,
+            0,
+            hash
             );
     }
 };

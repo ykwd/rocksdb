@@ -14,6 +14,6 @@ REM
 echo port = %port% >> run.txt
 echo package_dir = %package_dir% >> run.txt
 
-CALL %package_dir%\rocksdb.exe %package_dir%\config.appstore.ini -cargs port=%port% -app_list server  >> run.txt
+CALL %package_dir%\rrdb.exe %package_dir%\config.appstore.ini -cargs port=%port% -app_list server  >> run.txt
 
 

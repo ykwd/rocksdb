@@ -3,7 +3,7 @@
 # include <dsn/cpp/serialization.h>
 
 
-# include "thrift/rocksdb_types.h" 
+# include "thrift/rrdb_types.h" 
 
 
 namespace dsn { namespace apps { 

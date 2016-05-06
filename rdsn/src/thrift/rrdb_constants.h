@@ -4,14 +4,21 @@
  * DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
  *  @generated
  */
-#include "rocksdb_constants.h"
+#ifndef rrdb_CONSTANTS_H
+#define rrdb_CONSTANTS_H
+
+#include "rrdb_types.h"
 
 namespace dsn { namespace apps {
 
-const rocksdbConstants g_rocksdb_constants;
+class rrdbConstants {
+ public:
+  rrdbConstants();
 
-rocksdbConstants::rocksdbConstants() {
-}
+};
+
+extern const rrdbConstants g_rrdb_constants;
 
 }} // namespace
 
+#endif
