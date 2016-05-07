@@ -3,6 +3,7 @@
 # include "rrdb.server.h"
 # include <rocksdb/db.h>
 # include <vector>
+# include <dsn/cpp/replicated_service_app.h>
 
 namespace dsn
 {
@@ -10,7 +11,7 @@ namespace dsn
     {
         class rrdb_service_impl :
             public rrdb_service,
-            public ::dsn::service_app
+            public replicated_service_app_type_1
         {
         public:
             rrdb_service_impl();
@@ -34,8 +35,6 @@ namespace dsn
             const char* data_dir() { return _app_info->data_dir; }
 
             rocksdb::DB           *_db;
-            rocksdb::WriteBatch   _batch;
-            std::vector<rpc_replier<int>> _batch_repliers;
 
             rocksdb::Options      _db_opts;
             rocksdb::WriteOptions _wt_opts;
@@ -43,7 +42,33 @@ namespace dsn
 
             volatile bool         _is_open;
 
-            dsn_app_info*         _app_info;         // information from layer 
+            dsn_app_info*         _app_info;         // information from layer
+
+                                                     //for layer2
+        public:
+
+            virtual ::dsn::error_code checkpoint() override;
+
+            //virtual ::dsn::error_code checkpoint_async() override;
+
+            virtual int prepare_get_checkpoint(void* buffer, int capacity) override { return 0; }
+
+            virtual ::dsn::error_code get_checkpoint(
+                int64_t start,
+                void*   learn_request,
+                int     learn_request_size,
+                /* inout */ app_learn_state& state
+                ) override;
+
+            virtual ::dsn::error_code apply_checkpoint(const dsn_app_learn_state& state, dsn_chkpt_apply_mode mode) override;
+
+        private:
+            int64_t last_committed_decree() { return _app_info->info.type1.last_committed_decree; }
+            int64_t last_durable_decree() { return _app_info->info.type1.last_durable_decree; }
+            void    set_last_durable_decree(int64_t d) { _app_info->info.type1.last_durable_decree = d; }
+
+            void recover();
+            void recover(const std::string& name, int64_t version);
         };
     }
 }

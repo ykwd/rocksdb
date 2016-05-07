@@ -1,12 +1,18 @@
 # include "rrdb.server.impl.h"
 
+# include <fstream>
+# include <sstream>
+
 namespace dsn
 {
     namespace apps
     {
         rrdb_service_impl::rrdb_service_impl()
+            : _lock(true)
         {
             _is_open = false;
+            _app_info = nullptr;
+
             // init db options
             _db_opts.write_buffer_size =
                 (size_t)dsn_config_get_value_uint64("replication",
@@ -128,11 +134,16 @@ namespace dsn
 
             _app_info = dsn_get_app_info_ptr(gpid());
 
-            rocksdb::Options opts = _db_opts;
-            opts.create_if_missing = true;
-            opts.error_if_exists = false;
-            auto path = utils::filesystem::path_combine(data_dir(), "rdb");
-            auto status = rocksdb::DB::Open(opts, path, &_db);
+            rocksdb::Status status;
+            {
+                ::dsn::service::zauto_lock l(_lock);
+
+                rocksdb::Options opts = _db_opts;
+                opts.create_if_missing = true;
+                opts.error_if_exists = false;
+                auto path = utils::filesystem::path_combine(data_dir(), "rdb");
+                status = rocksdb::DB::Open(opts, path, &_db);
+            }
 
             if (status.ok())
             {
@@ -143,8 +154,7 @@ namespace dsn
             }
             else
             {
-                derror("open rocksdb %s failed, status = %s",
-                    path.c_str(),
+                derror("open rocksdb failed, status = %s",
                     status.ToString().c_str()
                     );
                 return ERR_LOCAL_APP_FAILURE;
@@ -153,17 +163,199 @@ namespace dsn
 
         ::dsn::error_code rrdb_service_impl::stop(bool clear_state)
         {
-            if (!_is_open)
+            close_service(gpid());
+
             {
-                dassert(_db == nullptr, "");
-                dassert(!clear_state, "should not be here if do clear");
+                ::dsn::service::zauto_lock l(_lock);
+
+                if (!_is_open)
+                {
+                    dassert(_db == nullptr, "");
+                    dassert(!clear_state, "should not be here if do clear");
+                    return ERR_OK;
+
+                }
+
+                _is_open = false;
+                delete _db;
+                _db = nullptr;
+
+                if (clear_state)
+                {
+                    if (!dsn::utils::filesystem::remove_path(data_dir()))
+                    {
+                        dassert(false, "Fail to delete directory %s.", data_dir());
+                    }
+                }
+            }
+            return ERR_OK;
+        }
+
+        void rrdb_service_impl::recover()
+        {
+            dsn::service::zauto_lock l(_lock);
+
+            int64_t maxVersion = 0;
+            std::string name;
+
+            std::vector<std::string> sub_list;
+            std::string path = data_dir();
+            if (!dsn::utils::filesystem::get_subfiles(path, sub_list, false))
+            {
+                dassert(false, "Fail to get subfiles in %s.", path.c_str());
+            }
+            for (auto& fpath : sub_list)
+            {
+                auto&& s = dsn::utils::filesystem::get_file_name(fpath);
+                if (s.substr(0, strlen("checkpoint.")) != std::string("checkpoint."))
+                    continue;
+
+                int64_t version = static_cast<int64_t>(atoll(s.substr(strlen("checkpoint.")).c_str()));
+                if (version > maxVersion)
+                {
+                    maxVersion = version;
+                    name = std::string(data_dir()) + "/" + s;
+                }
+            }
+            sub_list.clear();
+
+            if (maxVersion > 0)
+            {
+                recover(name, maxVersion);
+                set_last_durable_decree(maxVersion);
+            }
+        }
+
+        void rrdb_service_impl::recover(const std::string& name, int64_t version)
+        {
+            dsn::service::zauto_lock l(_lock);
+
+            std::ifstream is(name.c_str(), std::ios::binary);
+            if (!is.is_open())
+                return;
+
+            int magic;
+
+            is.read((char*)&magic, sizeof(magic));
+            dassert(magic == 0xdeadbeef, "invalid checkpoint");
+
+            for (; !is.eof(); )
+            {
+                std::string key;
+                std::string value;
+
+                uint32_t sz;
+                is.read((char*)&sz, (uint32_t)sizeof(sz));
+                key.resize(sz);
+
+                is.read((char*)&key[0], sz);
+
+                is.read((char*)&sz, (uint32_t)sizeof(sz));
+                value.resize(sz);
+
+                is.read((char*)&value[0], sz);
+
+                auto status = _db->Put(_wt_opts, key, value);
+                dassert(status.ok(), "fail to insert data to database during recovery");
+            }
+            is.close();
+        }
+
+        ::dsn::error_code rrdb_service_impl::checkpoint()
+        {
+            ::dsn::service::zauto_lock l(_lock);
+
+            if (last_committed_decree() == last_durable_decree())
+            {
                 return ERR_OK;
             }
-            close_service(gpid());
-            _is_open = false;
-            delete _db;
-            _db = nullptr;
+
+            char name[256];
+            sprintf(name, "%s/checkpoint.%" PRId64, data_dir(),
+                last_committed_decree()
+                );
+            std::ofstream os(name, std::ios::binary);
+
+            int magic = 0xdeadbeef;
+            os.write((const char*)&magic, (uint32_t)sizeof(magic));
+
+            uint64_t counter = 0;
+            rocksdb::Iterator* it = _db->NewIterator(rocksdb::ReadOptions());
+            for (it->SeekToFirst(); it->Valid(); it->Next()) {
+                std::string key = it->key().ToString();
+                std::string value = it->value().ToString();
+                uint32_t sz = key.length();
+                os.write((const char*)&sz, (uint32_t)sizeof(sz));
+                os.write(key.c_str(), sz);
+                sz = value.length();
+                os.write((const char*)&sz, (uint32_t)sizeof(sz));
+                os.write(value.c_str(), sz);
+            }
+            assert(it->status().ok()); // Check for any errors found during the scan
+            delete it;
+
+            os.close();
+            std::cout << "add checkpoint to " << std::string(name) << std::endl;
+            set_last_durable_decree(last_committed_decree());
             return ERR_OK;
+        }
+
+        ::dsn::error_code rrdb_service_impl::get_checkpoint(
+            int64_t start,
+            void*   learn_request,
+            int     learn_request_size,
+            /* inout */ app_learn_state& state
+            )
+        {
+            if (last_durable_decree() > 0)
+            {
+                char name[256];
+                sprintf(name, "%s/checkpoint.%" PRId64,
+                    data_dir(),
+                    last_durable_decree()
+                    );
+
+                state.from_decree_excluded = 0;
+                state.to_decree_included = last_durable_decree();
+                state.files.push_back(std::string(name));
+
+                return ERR_OK;
+            }
+            else
+            {
+                state.from_decree_excluded = 0;
+                state.to_decree_included = 0;
+                return ERR_OBJECT_NOT_FOUND;
+            }
+        }
+
+        ::dsn::error_code rrdb_service_impl::apply_checkpoint(const dsn_app_learn_state& state, dsn_chkpt_apply_mode mode)
+        {
+            if (mode == DSN_CHKPT_LEARN)
+            {
+                recover(state.files[0], state.to_decree_included);
+                return ERR_OK;
+            }
+            else
+            {
+                dassert(DSN_CHKPT_COPY == mode, "invalid mode %d", (int)mode);
+                dassert(state.to_decree_included > last_durable_decree(), "checkpoint's decree is smaller than current");
+
+                char name[256];
+                sprintf(name, "%s/checkpoint.%" PRId64,
+                    data_dir(),
+                    state.to_decree_included
+                    );
+                std::string lname(name);
+
+                if (!utils::filesystem::rename_path(state.files[0], lname))
+                    return ERR_CHECKPOINT_FAILED;
+                else
+                {
+                    set_last_durable_decree(state.to_decree_included);
+                    return ERR_OK;
+                }
+            }
         }
     }
 }
