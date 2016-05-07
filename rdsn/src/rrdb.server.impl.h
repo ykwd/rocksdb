@@ -14,12 +14,15 @@ namespace dsn
         {
         public:
             rrdb_service_impl();
-            // all service handlers to be implemented further
-            // RPC_MEMCACHED_MEMCACHED_PUT 
+
+            // RPC_RRDB_RRDB_PUT 
             virtual void on_put(const put_req& args, ::dsn::rpc_replier< put_resp>& reply);
 
-            // RPC_MEMCACHED_MEMCACHED_GET 
+            // RPC_RRDB_RRDB_GET 
             virtual void on_get(const get_req& args, ::dsn::rpc_replier< get_resp>& reply);
+
+            // RPC_RRDB_RRDB_REMOVE 
+            virtual void on_remove(const remove_req& args, ::dsn::rpc_replier< remove_resp>& reply);
 
             virtual ::dsn::error_code start(int argc, char** argv) override;
 
@@ -29,9 +32,6 @@ namespace dsn
             ::dsn::service::zlock _lock;
 
             const char* data_dir() { return _app_info->data_dir; }
-
-            // write batch data into rocksdb
-            void write_batch();
 
             rocksdb::DB           *_db;
             rocksdb::WriteBatch   _batch;

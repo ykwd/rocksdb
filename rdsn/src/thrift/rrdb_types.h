@@ -27,6 +27,10 @@ class get_req;
 
 class get_resp;
 
+class remove_req;
+
+class remove_resp;
+
 typedef struct _put_req__isset {
   _put_req__isset() : key(false), value(false) {}
   bool key :1;
@@ -218,6 +222,98 @@ class get_resp {
 void swap(get_resp &a, get_resp &b);
 
 inline std::ostream& operator<<(std::ostream& out, const get_resp& obj)
+{
+  obj.printTo(out);
+  return out;
+}
+
+typedef struct _remove_req__isset {
+  _remove_req__isset() : key(false) {}
+  bool key :1;
+} _remove_req__isset;
+
+class remove_req {
+ public:
+
+  remove_req(const remove_req&);
+  remove_req& operator=(const remove_req&);
+  remove_req() : key() {
+  }
+
+  virtual ~remove_req() throw();
+  std::string key;
+
+  _remove_req__isset __isset;
+
+  void __set_key(const std::string& val);
+
+  bool operator == (const remove_req & rhs) const
+  {
+    if (!(key == rhs.key))
+      return false;
+    return true;
+  }
+  bool operator != (const remove_req &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const remove_req & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  virtual void printTo(std::ostream& out) const;
+};
+
+void swap(remove_req &a, remove_req &b);
+
+inline std::ostream& operator<<(std::ostream& out, const remove_req& obj)
+{
+  obj.printTo(out);
+  return out;
+}
+
+typedef struct _remove_resp__isset {
+  _remove_resp__isset() : err(false) {}
+  bool err :1;
+} _remove_resp__isset;
+
+class remove_resp {
+ public:
+
+  remove_resp(const remove_resp&);
+  remove_resp& operator=(const remove_resp&);
+  remove_resp() : err(0) {
+  }
+
+  virtual ~remove_resp() throw();
+  int32_t err;
+
+  _remove_resp__isset __isset;
+
+  void __set_err(const int32_t val);
+
+  bool operator == (const remove_resp & rhs) const
+  {
+    if (!(err == rhs.err))
+      return false;
+    return true;
+  }
+  bool operator != (const remove_resp &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const remove_resp & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  virtual void printTo(std::ostream& out) const;
+};
+
+void swap(remove_resp &a, remove_resp &b);
+
+inline std::ostream& operator<<(std::ostream& out, const remove_resp& obj)
 {
   obj.printTo(out);
   return out;

@@ -104,6 +104,52 @@ public:
                     reply_hash
                     );
     }
+ 
+    // ---------- call RPC_RRDB_RRDB_REMOVE ------------
+    // - synchronous 
+    std::pair< ::dsn::error_code, remove_resp> remove_sync(
+        const remove_req& args,
+        std::chrono::milliseconds timeout = std::chrono::milliseconds(0), 
+        uint64_t hash = 0,
+        dsn::optional< ::dsn::rpc_address> server_addr = dsn::none
+        )
+    {
+        return ::dsn::rpc::wait_and_unwrap< remove_resp>(
+            ::dsn::rpc::call(
+                server_addr.unwrap_or(_server),
+                RPC_RRDB_RRDB_REMOVE,
+                args,
+                nullptr,
+                empty_callback,
+                hash,
+                timeout,
+                0
+                )
+            );
+    }
+    
+    // - asynchronous with on-stack remove_req and remove_resp  
+    template<typename TCallback>
+    ::dsn::task_ptr remove(
+        const remove_req& args,
+        TCallback&& callback,
+        std::chrono::milliseconds timeout = std::chrono::milliseconds(0),
+        int reply_hash = 0,
+        uint64_t hash = 0,
+        dsn::optional< ::dsn::rpc_address> server_addr = dsn::none
+        )
+    {
+        return ::dsn::rpc::call(
+                    server_addr.unwrap_or(_server), 
+                    RPC_RRDB_RRDB_REMOVE, 
+                    args,
+                    this,
+                    std::forward<TCallback>(callback),
+                    hash, 
+                    timeout, 
+                    reply_hash
+                    );
+    }
 
 private:
     ::dsn::rpc_address _server;

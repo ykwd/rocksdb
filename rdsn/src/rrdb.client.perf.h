@@ -26,6 +26,10 @@ public:
         {
             send_one_get(payload_bytes, key_space_size);
         }
+        else if (prob <= ratios[2])
+        {
+            send_one_remove(payload_bytes, key_space_size);
+        }
         else { /* nothing to do */ }
     }
     
@@ -57,6 +61,7 @@ public:
         char buf[10];
         auto key = random64(0, 10000000) % key_space_size;
         itoa(key, buf, 10);
+        req.key = std::string(buf);
         auto hash = key;
         get(
             req,
@@ -64,6 +69,26 @@ public:
             {
                 end_send_one(context, err);
             },
+            _timeout,
+            0,
+            hash
+            );
+    }
+
+    void send_one_remove(int payload_bytes, int key_space_size)
+    {
+        remove_req req;
+        char buf[10];
+        auto key = random64(0, 10000000) % key_space_size;
+        itoa(key, buf, 10);
+        req.key = std::string(buf);
+        auto hash = key;
+        remove(
+            req,
+            [this, context = prepare_send_one()](error_code err, remove_resp&& resp)
+        {
+            end_send_one(context, err);
+        },
             _timeout,
             0,
             hash

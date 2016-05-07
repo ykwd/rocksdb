@@ -107,6 +107,21 @@ namespace dsn
             reply(resp);
         }
 
+        void rrdb_service_impl::on_remove(const remove_req& args, ::dsn::rpc_replier< remove_resp>& reply)
+        {
+            dassert(_is_open, "rrdb service %s is not ready", data_dir());
+
+            remove_resp resp;
+            rocksdb::Slice skey(args.key);
+            rocksdb::Status status = _db->Delete(_wt_opts, skey);
+            if (!status.ok() && !status.IsNotFound())
+            {
+                derror("%s failed, status = %s", __FUNCTION__, status.ToString().c_str());
+            }
+            resp.err = status.code();
+            reply(resp);
+        }
+
         ::dsn::error_code rrdb_service_impl::start(int argc, char** argv)
         {
             dassert(!_is_open, "rrdb service %s is already opened", data_dir());

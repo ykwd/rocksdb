@@ -26,18 +26,27 @@ protected:
         get_resp resp;
         reply(resp);
     }
+    // RPC_RRDB_RRDB_REMOVE 
+    virtual void on_remove(const remove_req& args, ::dsn::rpc_replier< remove_resp>& reply)
+    {
+        std::cout << "... exec RPC_RRDB_RRDB_REMOVE ... (not implemented) " << std::endl;
+        remove_resp resp;
+        reply(resp);
+    }
     
 public:
     void open_service(dsn_gpid gpid)
     {
         this->register_async_rpc_handler(RPC_RRDB_RRDB_PUT, "put", &rrdb_service::on_put, gpid);
         this->register_async_rpc_handler(RPC_RRDB_RRDB_GET, "get", &rrdb_service::on_get, gpid);
+        this->register_async_rpc_handler(RPC_RRDB_RRDB_REMOVE, "remove", &rrdb_service::on_remove, gpid);
     }
 
     void close_service(dsn_gpid gpid)
     {
         this->unregister_rpc_handler(RPC_RRDB_RRDB_PUT, gpid);
         this->unregister_rpc_handler(RPC_RRDB_RRDB_GET, gpid);
+        this->unregister_rpc_handler(RPC_RRDB_RRDB_REMOVE, gpid);
     }
 };
 

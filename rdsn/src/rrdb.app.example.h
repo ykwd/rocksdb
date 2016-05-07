@@ -67,6 +67,14 @@ public:
             //_rrdb_client->get({});
            
         }
+        {
+            //sync:
+            auto result = _rrdb_client->remove_sync({});
+            std::cout << "call RPC_RRDB_RRDB_REMOVE end, return " << result.first.to_string() << std::endl;
+            //async: 
+            //_rrdb_client->remove({});
+
+        }
     }
 
 private:
@@ -100,7 +108,7 @@ public:
         _server = ::dsn::url_host_address(argv[1]);
 
         _rrdb_client = new rrdb_perf_test_client(_server);
-        _rrdb_client->start_test("rrdb.perf-test.case.", 2);
+        _rrdb_client->start_test("rrdb.perf-test.case.", 3);
         return ::dsn::ERR_OK;
     }
 
