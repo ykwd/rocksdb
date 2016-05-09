@@ -31,6 +31,18 @@ class remove_req;
 
 class remove_resp;
 
+class batch_put_req;
+
+class batch_put_resp;
+
+class batch_get_req;
+
+class batch_get_resp;
+
+class batch_remove_req;
+
+class batch_remove_resp;
+
 typedef struct _put_req__isset {
   _put_req__isset() : key(false), value(false) {}
   bool key :1;
@@ -314,6 +326,282 @@ class remove_resp {
 void swap(remove_resp &a, remove_resp &b);
 
 inline std::ostream& operator<<(std::ostream& out, const remove_resp& obj)
+{
+  obj.printTo(out);
+  return out;
+}
+
+typedef struct _batch_put_req__isset {
+  _batch_put_req__isset() : reqs(false) {}
+  bool reqs :1;
+} _batch_put_req__isset;
+
+class batch_put_req {
+ public:
+
+  batch_put_req(const batch_put_req&);
+  batch_put_req& operator=(const batch_put_req&);
+  batch_put_req() {
+  }
+
+  virtual ~batch_put_req() throw();
+  std::vector<put_req>  reqs;
+
+  _batch_put_req__isset __isset;
+
+  void __set_reqs(const std::vector<put_req> & val);
+
+  bool operator == (const batch_put_req & rhs) const
+  {
+    if (!(reqs == rhs.reqs))
+      return false;
+    return true;
+  }
+  bool operator != (const batch_put_req &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const batch_put_req & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  virtual void printTo(std::ostream& out) const;
+};
+
+void swap(batch_put_req &a, batch_put_req &b);
+
+inline std::ostream& operator<<(std::ostream& out, const batch_put_req& obj)
+{
+  obj.printTo(out);
+  return out;
+}
+
+typedef struct _batch_put_resp__isset {
+  _batch_put_resp__isset() : resps(false) {}
+  bool resps :1;
+} _batch_put_resp__isset;
+
+class batch_put_resp {
+ public:
+
+  batch_put_resp(const batch_put_resp&);
+  batch_put_resp& operator=(const batch_put_resp&);
+  batch_put_resp() {
+  }
+
+  virtual ~batch_put_resp() throw();
+  std::vector<put_resp>  resps;
+
+  _batch_put_resp__isset __isset;
+
+  void __set_resps(const std::vector<put_resp> & val);
+
+  bool operator == (const batch_put_resp & rhs) const
+  {
+    if (!(resps == rhs.resps))
+      return false;
+    return true;
+  }
+  bool operator != (const batch_put_resp &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const batch_put_resp & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  virtual void printTo(std::ostream& out) const;
+};
+
+void swap(batch_put_resp &a, batch_put_resp &b);
+
+inline std::ostream& operator<<(std::ostream& out, const batch_put_resp& obj)
+{
+  obj.printTo(out);
+  return out;
+}
+
+typedef struct _batch_get_req__isset {
+  _batch_get_req__isset() : reqs(false) {}
+  bool reqs :1;
+} _batch_get_req__isset;
+
+class batch_get_req {
+ public:
+
+  batch_get_req(const batch_get_req&);
+  batch_get_req& operator=(const batch_get_req&);
+  batch_get_req() {
+  }
+
+  virtual ~batch_get_req() throw();
+  std::vector<get_req>  reqs;
+
+  _batch_get_req__isset __isset;
+
+  void __set_reqs(const std::vector<get_req> & val);
+
+  bool operator == (const batch_get_req & rhs) const
+  {
+    if (!(reqs == rhs.reqs))
+      return false;
+    return true;
+  }
+  bool operator != (const batch_get_req &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const batch_get_req & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  virtual void printTo(std::ostream& out) const;
+};
+
+void swap(batch_get_req &a, batch_get_req &b);
+
+inline std::ostream& operator<<(std::ostream& out, const batch_get_req& obj)
+{
+  obj.printTo(out);
+  return out;
+}
+
+typedef struct _batch_get_resp__isset {
+  _batch_get_resp__isset() : resps(false) {}
+  bool resps :1;
+} _batch_get_resp__isset;
+
+class batch_get_resp {
+ public:
+
+  batch_get_resp(const batch_get_resp&);
+  batch_get_resp& operator=(const batch_get_resp&);
+  batch_get_resp() {
+  }
+
+  virtual ~batch_get_resp() throw();
+  std::vector<get_resp>  resps;
+
+  _batch_get_resp__isset __isset;
+
+  void __set_resps(const std::vector<get_resp> & val);
+
+  bool operator == (const batch_get_resp & rhs) const
+  {
+    if (!(resps == rhs.resps))
+      return false;
+    return true;
+  }
+  bool operator != (const batch_get_resp &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const batch_get_resp & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  virtual void printTo(std::ostream& out) const;
+};
+
+void swap(batch_get_resp &a, batch_get_resp &b);
+
+inline std::ostream& operator<<(std::ostream& out, const batch_get_resp& obj)
+{
+  obj.printTo(out);
+  return out;
+}
+
+typedef struct _batch_remove_req__isset {
+  _batch_remove_req__isset() : reqs(false) {}
+  bool reqs :1;
+} _batch_remove_req__isset;
+
+class batch_remove_req {
+ public:
+
+  batch_remove_req(const batch_remove_req&);
+  batch_remove_req& operator=(const batch_remove_req&);
+  batch_remove_req() {
+  }
+
+  virtual ~batch_remove_req() throw();
+  std::vector<remove_req>  reqs;
+
+  _batch_remove_req__isset __isset;
+
+  void __set_reqs(const std::vector<remove_req> & val);
+
+  bool operator == (const batch_remove_req & rhs) const
+  {
+    if (!(reqs == rhs.reqs))
+      return false;
+    return true;
+  }
+  bool operator != (const batch_remove_req &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const batch_remove_req & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  virtual void printTo(std::ostream& out) const;
+};
+
+void swap(batch_remove_req &a, batch_remove_req &b);
+
+inline std::ostream& operator<<(std::ostream& out, const batch_remove_req& obj)
+{
+  obj.printTo(out);
+  return out;
+}
+
+typedef struct _batch_remove_resp__isset {
+  _batch_remove_resp__isset() : resps(false) {}
+  bool resps :1;
+} _batch_remove_resp__isset;
+
+class batch_remove_resp {
+ public:
+
+  batch_remove_resp(const batch_remove_resp&);
+  batch_remove_resp& operator=(const batch_remove_resp&);
+  batch_remove_resp() {
+  }
+
+  virtual ~batch_remove_resp() throw();
+  std::vector<remove_resp>  resps;
+
+  _batch_remove_resp__isset __isset;
+
+  void __set_resps(const std::vector<remove_resp> & val);
+
+  bool operator == (const batch_remove_resp & rhs) const
+  {
+    if (!(resps == rhs.resps))
+      return false;
+    return true;
+  }
+  bool operator != (const batch_remove_resp &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const batch_remove_resp & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  virtual void printTo(std::ostream& out) const;
+};
+
+void swap(batch_remove_resp &a, batch_remove_resp &b);
+
+inline std::ostream& operator<<(std::ostream& out, const batch_remove_resp& obj)
 {
   obj.printTo(out);
   return out;

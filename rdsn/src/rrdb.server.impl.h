@@ -25,11 +25,27 @@ namespace dsn
             // RPC_RRDB_RRDB_REMOVE 
             virtual void on_remove(const remove_req& args, ::dsn::rpc_replier< remove_resp>& reply);
 
+            // RPC_RRDB_RRDB_BATCH_PUT 
+            virtual void on_batch_put(const batch_put_req& args, ::dsn::rpc_replier< batch_put_resp>& reply);
+
+            // RPC_RRDB_RRDB_BATCH_GET 
+            virtual void on_batch_get(const batch_get_req& args, ::dsn::rpc_replier< batch_get_resp>& reply);
+
+            // RPC_RRDB_RRDB_BATCH_REMOVE 
+            virtual void on_batch_remove(const batch_remove_req& args, ::dsn::rpc_replier< batch_remove_resp>& reply);
+
+
             virtual ::dsn::error_code start(int argc, char** argv) override;
 
             virtual ::dsn::error_code stop(bool cleanup = false) override;
 
         private:
+            void put_internal(const put_req& req, put_resp& resp);
+
+            void get_internal(const get_req& req, get_resp& resp);
+
+            void remove_internal(const remove_req& req, remove_resp& resp);
+
             ::dsn::service::zlock _lock;
 
             const char* data_dir() { return _app_info->data_dir; }

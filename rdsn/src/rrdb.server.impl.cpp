@@ -80,20 +80,46 @@ namespace dsn
 
         }
 
-        void rrdb_service_impl::on_put(const put_req& args, ::dsn::rpc_replier< put_resp>& reply)
+        void rrdb_service_impl::put_internal(const put_req& req, put_resp& resp)
         {
-            dassert(_is_open, "rrdb service %s is not ready", data_dir());
-
-            rocksdb::Slice skey(args.key);
-            rocksdb::Slice svalue(args.value);
+            rocksdb::Slice skey(req.key);
+            rocksdb::Slice svalue(req.value);
 
             auto status = _db->Put(_wt_opts, skey, svalue);
             if (!status.ok())
             {
                 derror("%s failed, status = %s", __FUNCTION__, status.ToString().c_str());
             }
-            put_resp resp;
             resp.err = status.code();
+        }
+
+        void rrdb_service_impl::get_internal(const get_req& req, get_resp& resp)
+        {
+            rocksdb::Slice skey(req.key);
+            rocksdb::Status status = _db->Get(_rd_opts, skey, &resp.value);
+            if (!status.ok() && !status.IsNotFound())
+            {
+                derror("%s failed, status = %s", __FUNCTION__, status.ToString().c_str());
+            }
+            resp.err = status.code();
+        }
+
+        void rrdb_service_impl::remove_internal(const remove_req& req, remove_resp& resp)
+        {
+            rocksdb::Slice skey(req.key);
+            rocksdb::Status status = _db->Delete(_wt_opts, skey);
+            if (!status.ok() && !status.IsNotFound())
+            {
+                derror("%s failed, status = %s", __FUNCTION__, status.ToString().c_str());
+            }
+            resp.err = status.code();
+        }
+
+        void rrdb_service_impl::on_put(const put_req& args, ::dsn::rpc_replier< put_resp>& reply)
+        {
+            dassert(_is_open, "rrdb service %s is not ready", data_dir());
+            put_resp resp;
+            put_internal(args, resp);
             reply(resp);
 
         }
@@ -101,31 +127,59 @@ namespace dsn
         void rrdb_service_impl::on_get(const get_req& args, ::dsn::rpc_replier< get_resp>& reply)
         {
             dassert(_is_open, "rrdb service %s is not ready", data_dir());
-
             get_resp resp;
-            rocksdb::Slice skey(args.key);
-            rocksdb::Status status = _db->Get(_rd_opts, skey, &resp.value);
-            if (!status.ok() && !status.IsNotFound())
-            {
-                derror("%s failed, status = %s", __FUNCTION__, status.ToString().c_str());
-            }
-            resp.err = status.code();
+            get_internal(args, resp);
             reply(resp);
         }
 
         void rrdb_service_impl::on_remove(const remove_req& args, ::dsn::rpc_replier< remove_resp>& reply)
         {
             dassert(_is_open, "rrdb service %s is not ready", data_dir());
-
             remove_resp resp;
-            rocksdb::Slice skey(args.key);
-            rocksdb::Status status = _db->Delete(_wt_opts, skey);
-            if (!status.ok() && !status.IsNotFound())
-            {
-                derror("%s failed, status = %s", __FUNCTION__, status.ToString().c_str());
-            }
-            resp.err = status.code();
+            remove_internal(args, resp);
             reply(resp);
+        }
+
+        // RPC_RRDB_RRDB_BATCH_PUT 
+        void rrdb_service_impl::on_batch_put(const batch_put_req& args, ::dsn::rpc_replier< batch_put_resp>& reply)
+        {
+            dassert(_is_open, "rrdb service %s is not ready", data_dir());
+            batch_put_resp resps;
+            for (auto req : args.reqs)
+            {
+                put_resp resp;
+                put_internal(req, resp);
+                resps.resps.push_back(resp);
+            }
+            reply(resps);
+        }
+
+        // RPC_RRDB_RRDB_BATCH_GET 
+        void rrdb_service_impl::on_batch_get(const batch_get_req& args, ::dsn::rpc_replier< batch_get_resp>& reply)
+        {
+            dassert(_is_open, "rrdb service %s is not ready", data_dir());
+            batch_get_resp resps;
+            for (auto req : args.reqs)
+            {
+                get_resp resp;
+                get_internal(req, resp);
+                resps.resps.push_back(resp);
+            }
+            reply(resps);
+        }
+
+        // RPC_RRDB_RRDB_BATCH_REMOVE 
+        void rrdb_service_impl::on_batch_remove(const batch_remove_req& args, ::dsn::rpc_replier< batch_remove_resp>& reply)
+        {
+            dassert(_is_open, "rrdb service %s is not ready", data_dir());
+            batch_remove_resp resps;
+            for (auto req : args.reqs)
+            {
+                remove_resp resp;
+                remove_internal(req, resp);
+                resps.resps.push_back(resp);
+            }
+            reply(resps);
         }
 
         ::dsn::error_code rrdb_service_impl::start(int argc, char** argv)
