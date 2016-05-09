@@ -145,7 +145,7 @@ namespace dsn
         {
             dassert(_is_open, "rrdb service %s is not ready", data_dir());
             batch_put_resp resps;
-            for (auto req : args.reqs)
+            for (auto& req : args.reqs)
             {
                 put_resp resp;
                 put_internal(req, resp);
@@ -159,7 +159,7 @@ namespace dsn
         {
             dassert(_is_open, "rrdb service %s is not ready", data_dir());
             batch_get_resp resps;
-            for (auto req : args.reqs)
+            for (auto& req : args.reqs)
             {
                 get_resp resp;
                 get_internal(req, resp);
@@ -173,7 +173,7 @@ namespace dsn
         {
             dassert(_is_open, "rrdb service %s is not ready", data_dir());
             batch_remove_resp resps;
-            for (auto req : args.reqs)
+            for (auto& req : args.reqs)
             {
                 remove_resp resp;
                 remove_internal(req, resp);
