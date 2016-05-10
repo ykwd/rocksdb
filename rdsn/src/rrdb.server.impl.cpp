@@ -17,7 +17,7 @@ namespace dsn
             _db_opts.write_buffer_size =
                 (size_t)dsn_config_get_value_uint64("replication",
                     "rocksdb_write_buffer_size",
-                    134217728,
+                    (64 << 20),
                     "rocksdb options.write_buffer_size, default 128MB"
                     );
             _db_opts.max_write_buffer_number =
